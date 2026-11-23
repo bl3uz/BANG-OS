@@ -143,6 +143,7 @@
             box-shadow: var(--shadow-pill);
             color: var(--text-main);
             transition: border-color 0.2s, box-shadow 0.2s;
+            position: relative;
         }
         .plasmoid:hover {
             border-color: var(--border-glass-bright);
@@ -159,9 +160,25 @@
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
+        .plasmoid-header div {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
         .plasmoid-header i {
             color: var(--accent);
             font-size: 16px;
+        }
+        .plasmoid-close {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        .plasmoid-close:hover {
+            color: var(--danger);
         }
 
         /* System Monitor Plasmoid */
@@ -322,10 +339,15 @@
         .sys-pill {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-size: 12px;
             font-family: var(--font-mono);
             color: var(--text-muted);
+        }
+        .sys-pill span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         .sys-pill span i {
             color: var(--accent);
@@ -1156,6 +1178,7 @@
             <div class="sys-pill">
                 <span><i class="ph-bold ph-cpu"></i> <span id="top-cpu">12%</span></span>
                 <span><i class="ph-bold ph-memory"></i> <span id="top-ram">42%</span></span>
+                <span><i class="ph-bold ph-battery-charging" id="top-batt-icon"></i> <span id="top-batt">98%</span></span>
             </div>
             <button class="top-btn" id="cc-toggle">
                 <i class="ph-bold ph-sliders"></i>
@@ -1166,10 +1189,10 @@
     <!-- 3. DESKTOP KDE PLASMOIDS -->
     <div id="desktop">
         <!-- System Monitor Plasmoid -->
-        <div class="plasmoid">
+        <div class="plasmoid" id="plasmoid-sysmon">
             <div class="plasmoid-header">
-                <span>System Health</span>
-                <i class="ph-bold ph-activity"></i>
+                <div><i class="ph-bold ph-activity"></i><span>System Health</span></div>
+                <button class="plasmoid-close" onclick="removePlasmoid('plasmoid-sysmon')"><i class="ph-bold ph-x"></i></button>
             </div>
             <div class="sys-meter">
                 <div class="sys-meter-info"><span>CPU Usage</span><span id="plasmoid-cpu-text">14%</span></div>
@@ -1183,10 +1206,10 @@
         </div>
 
         <!-- Sticky Note Plasmoid -->
-        <div class="plasmoid">
+        <div class="plasmoid" id="plasmoid-notes">
             <div class="plasmoid-header">
-                <span>Sticky Notes</span>
-                <i class="ph-bold ph-note-pencil"></i>
+                <div><i class="ph-bold ph-note-pencil"></i><span>Sticky Notes</span></div>
+                <button class="plasmoid-close" onclick="removePlasmoid('plasmoid-notes')"><i class="ph-bold ph-x"></i></button>
             </div>
             <textarea class="sticky-note-content" id="sticky-note" placeholder="Jot down quick thoughts here... Saved locally."></textarea>
         </div>
@@ -1215,6 +1238,10 @@
             <div class="launcher-app" onclick="openApp('devutils')">
                 <i class="ph-bold ph-wrench"></i>
                 <span>Dev Utils</span>
+            </div>
+            <div class="launcher-app" onclick="spawnCustomWidgetPrompt()">
+                <i class="ph-bold ph-plus-circle"></i>
+                <span>Add Widget (JS)</span>
             </div>
         </div>
     </div>
@@ -1388,50 +1415,136 @@
             });
         }
 
-        /* --- SYSTEM MONITOR SPARKLINE --- */
+        /* --- SYSTEM MONITOR & BATTERY HEALTH --- */
         const sparkCanvas = document.getElementById('sparkline-canvas');
         const sparkCtx = sparkCanvas.getContext('2d');
         let cpuHistory = Array(20).fill(15);
+        let batteryLevel = 92;
+        let isCharging = true;
 
-        function updateSystemStats() {
+        async function updateSystemStats() {
             const cpu = Math.floor(Math.random() * 25) + 10;
             const ram = 42 + Math.floor(Math.sin(Date.now() / 2000) * 5);
 
             document.getElementById('top-cpu').textContent = cpu + '%';
             document.getElementById('top-ram').textContent = ram + '%';
-            document.getElementById('plasmoid-cpu-text').textContent = cpu + '%';
-            document.getElementById('plasmoid-cpu-bar').style.width = cpu + '%';
-            document.getElementById('plasmoid-ram-text').textContent = ram + '%';
-            document.getElementById('plasmoid-ram-bar').style.width = ram + '%';
+            
+            const cpuText = document.getElementById('plasmoid-cpu-text');
+            const cpuBar = document.getElementById('plasmoid-cpu-bar');
+            const ramText = document.getElementById('plasmoid-ram-text');
+            const ramBar = document.getElementById('plasmoid-ram-bar');
+            if(cpuText) cpuText.textContent = cpu + '%';
+            if(cpuBar) cpuBar.style.width = cpu + '%';
+            if(ramText) ramText.textContent = ram + '%';
+            if(ramBar) ramBar.style.width = ram + '%';
 
             cpuHistory.shift();
             cpuHistory.push(cpu);
 
-            // Draw Sparkline
-            sparkCanvas.width = sparkCanvas.offsetWidth;
-            sparkCanvas.height = sparkCanvas.offsetHeight;
-            sparkCtx.clearRect(0, 0, sparkCanvas.width, sparkCanvas.height);
-            sparkCtx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-            sparkCtx.lineWidth = 2;
-            sparkCtx.beginPath();
+            // Draw Sparkline if canvas exists
+            if(sparkCanvas && sparkCanvas.offsetParent !== null) {
+                sparkCanvas.width = sparkCanvas.offsetWidth;
+                sparkCanvas.height = sparkCanvas.offsetHeight;
+                sparkCtx.clearRect(0, 0, sparkCanvas.width, sparkCanvas.height);
+                sparkCtx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+                sparkCtx.lineWidth = 2;
+                sparkCtx.beginPath();
 
-            const step = sparkCanvas.width / (cpuHistory.length - 1);
-            cpuHistory.forEach((val, idx) => {
-                const x = idx * step;
-                const y = sparkCanvas.height - (val / 100) * sparkCanvas.height;
-                if (idx === 0) sparkCtx.moveTo(x, y);
-                else sparkCtx.lineTo(x, y);
-            });
-            sparkCtx.stroke();
+                const step = sparkCanvas.width / (cpuHistory.length - 1);
+                cpuHistory.forEach((val, idx) => {
+                    const x = idx * step;
+                    const y = sparkCanvas.height - (val / 100) * sparkCanvas.height;
+                    if (idx === 0) sparkCtx.moveTo(x, y);
+                    else sparkCtx.lineTo(x, y);
+                });
+                sparkCtx.stroke();
+            }
+
+            // Native Battery API support simulation & fallback
+            if (navigator.getBattery) {
+                try {
+                    const batt = await navigator.getBattery();
+                    batteryLevel = Math.round(batt.level * 100);
+                    isCharging = batt.charging;
+                } catch(e) {}
+            } else {
+                // Simulate battery fluctuation slowly over time
+                if (Math.random() > 0.95) batteryLevel = Math.max(10, batteryLevel - 1);
+            }
+
+            document.getElementById('top-batt').textContent = batteryLevel + '%';
+            const battIcon = document.getElementById('top-batt-icon');
+            if (isCharging) {
+                battIcon.className = "ph-bold ph-battery-charging";
+            } else if (batteryLevel > 75) {
+                battIcon.className = "ph-bold ph-battery-high";
+            } else if (batteryLevel > 30) {
+                battIcon.className = "ph-bold ph-battery-medium";
+            } else {
+                battIcon.className = "ph-bold ph-battery-low";
+            }
         }
         setInterval(updateSystemStats, 1500);
 
         // Sticky note local storage
         const stickyNote = document.getElementById('sticky-note');
-        stickyNote.value = localStorage.getItem('bang_sticky') || '';
-        stickyNote.addEventListener('input', () => {
-            localStorage.setItem('bang_sticky', stickyNote.value);
-        });
+        if(stickyNote) {
+            stickyNote.value = localStorage.getItem('bang_sticky') || '';
+            stickyNote.addEventListener('input', () => {
+                localStorage.setItem('bang_sticky', stickyNote.value);
+            });
+        }
+
+
+        /* ==========================================
+           WIDGET ADDER SYSTEM (JS Custom Widgets)
+           ========================================== */
+        function removePlasmoid(id) {
+            const el = document.getElementById(id);
+            if(el) el.remove();
+        }
+
+        function spawnCustomWidgetPrompt() {
+            appLauncher.classList.remove('open');
+            openApp('code');
+            setTimeout(() => {
+                const codeArea = document.getElementById('code-textarea');
+                codeArea.value = `// Write or paste custom JavaScript widget creator code here!
+// Example: Create a live quote or custom clock widget
+
+const widgetId = 'custom-widget-' + Date.now();
+const desktop = document.getElementById('desktop');
+
+const card = document.createElement('div');
+card.className = 'plasmoid';
+card.id = widgetId;
+card.innerHTML = \`
+    <div class="plasmoid-header">
+        <div><i class="ph-bold ph-star"></i><span>Custom JS Widget</span></div>
+        <button class="plasmoid-close" onclick="removePlasmoid('\${widgetId}')"><i class="ph-bold ph-x"></i></button>
+    </div>
+    <div style="font-size: 13px; color: var(--text-main); padding: 5px 0;" id="\${widgetId}-body">
+        Hello from dynamic JS widget! Time: <span id="\${widgetId}-time"></span>
+    </div>
+\`;
+desktop.appendChild(card);
+
+setInterval(() => {
+    const timeEl = document.getElementById(\`\${widgetId}-time\`);
+    if(timeEl) timeEl.textContent = new Date().toLocaleTimeString();
+}, 1000);
+`;
+                // Automatically create a run action or let them evaluate
+                if(confirm("Would you like BANG OS to execute this widget script now and mount it on the desktop?")) {
+                    try {
+                        eval(codeArea.value);
+                        alert("Widget successfully added to your desktop!");
+                    } catch(err) {
+                        alert("Error executing widget script: " + err.message);
+                    }
+                }
+            }, 150);
+        }
 
 
         /* ==========================================
@@ -1771,7 +1884,6 @@ Start writing Markdown here and watch the live preview render instantly on the r
         let audioSourceNode = null;
         let isPlaying = false;
 
-        // Built-in procedural ambient synths as fallback tracks
         let playlist = [
             { name: "Synthetic Lo-Fi Chill", artist: "BANG OS Synth Engine", type: "synth", freq: 220 },
             { name: "Cyberpunk Ambient Chord", artist: "Caelestia Audio", type: "synth", freq: 146.83 }
@@ -1850,7 +1962,8 @@ Start writing Markdown here and watch the live preview render instantly on the r
                 }
             }
             document.getElementById('top-media-title').textContent = track.name;
-            document.getElementById('player-title').textContent = track.name;
+            const playerTitle = document.getElementById('player-title');
+            if(playerTitle) playerTitle.textContent = track.name;
         }
 
         function playCurrentTrack() {
@@ -1879,7 +1992,6 @@ Start writing Markdown here and watch the live preview render instantly on the r
             synthOscillator.type = 'sine';
             synthOscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
-            // Add filter & analyser
             synthGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
             synthOscillator.connect(synthGain);
             synthGain.connect(audioAnalyser);
@@ -1901,12 +2013,12 @@ Start writing Markdown here and watch the live preview render instantly on the r
 
             function draw() {
                 requestAnimationFrame(draw);
+                if(!canvas || canvas.offsetParent === null) return;
                 canvas.width = canvas.offsetWidth;
                 canvas.height = canvas.offsetHeight;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                 if (!isPlaying || !audioAnalyser) {
-                    // Draw idle flat bars
                     ctx.fillStyle = 'rgba(255,255,255,0.05)';
                     for (let i = 0; i < 16; i++) {
                         ctx.fillRect(i * 20 + 10, canvas.height - 10, 12, 4);
@@ -1939,10 +2051,9 @@ Start writing Markdown here and watch the live preview render instantly on the r
 
             function updatePreview() {
                 const text = textarea.value;
-                // Simple markdown parser simulation
                 let html = text
                     .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/^## (.*$)/gim, '<h2>$2</h2>')
                     .replace(/^- (.*$)/gim, '<li>$1</li>')
                     .replace(/\n/gim, '<br>');
                 preview.innerHTML = html;
