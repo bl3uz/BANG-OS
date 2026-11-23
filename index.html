@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="lavender">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANG OS — Caelestia Plasma Linux</title>
+    <!-- Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* ==========================================
+           1. DESIGN SYSTEM & CAELESTIA / KDE VARIABLES
+           ========================================== */
+        :root {
+            --bg-base: #11111b;
+            --bg-surface: rgba(24, 24, 37, 0.75);
+            --bg-surface-solid: #181825;
+            --bg-glass: rgba(30, 30, 46, 0.65);
+            --bg-glass-hover: rgba(49, 50, 68, 0.75);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-glass-bright: rgba(255, 255, 255, 0.18);
+            
+            --text-main: #cdd6f4;
+            --text-muted: #a6adc8;
+            --text-dim: #6c7086;
+
+            /* Default Theme: Lavender */
+            --accent: #cba6f7;
+            --accent-rgb: 203, 166, 247;
+            --accent-glow: rgba(203, 166, 247, 0.25);
+            --accent-gradient: linear-gradient(135deg, #cba6f7 0%, #b4befe 100%);
+
+            --success: #a6e3a1;
+            --warning: #f9e2af;
+            --danger: #f38ba8;
+
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            --radius-pill: 9999px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+
+            --shadow-window: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-glass);
+            --shadow-pill: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --blur-strength: blur(20px);
+        }
+
+        [data-theme="peach"] {
+            --accent: #fab387;
+            --accent-rgb: 250, 179, 135;
+            --accent-glow: rgba(250, 179, 135, 0.25);
+            --accent-gradient: linear-gradient(135deg, #fab387 0%, #f9e2af 100%);
+        }
+        [data-theme="mint"] {
+            --accent: #94e2d5;
+            --accent-rgb: 148, 226, 213;
+            --accent-glow: rgba(148, 226, 213, 0.25);
+            --accent-gradient: linear-gradient(135deg, #94e2d5 0%, #89dceb 100%);
+        }
+        [data-theme="rose"] {
+            --accent: #f5c2e7;
+            --accent-rgb: 245, 194, 231;
+            --accent-glow: rgba(245, 194, 231, 0.25);
+            --accent-gradient: linear-gradient(135deg, #f5c2e7 0%, #eba0ac 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: var(--font-sans);
+        }
+
+        body, html {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+        }
+
+        /* ==========================================
+           2. WALLPAPER (Pure CSS/SVG Abstract Matrix)
+           ========================================== */
+        #wallpaper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            background: radial-gradient(circle at 50% 30%, #1e1e2e 0%, #11111b 100%);
+            overflow: hidden;
+        }
+        .wp-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.45;
+            animation: floatBlob 20s infinite alternate ease-in-out;
+        }
+        .wp-blob-1 { width: 500px; height: 500px; background: var(--accent); top: -10%; left: -10%; }
+        .wp-blob-2 { width: 600px; height: 600px; background: #89b4fa; bottom: -20%; right: -10%; animation-delay: -5s; }
+        .wp-blob-3 { width: 400px; height: 400px; background: #f38ba8; top: 40%; left: 30%; animation-delay: -10s; opacity: 0.2; }
+
+        @keyframes floatBlob {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 80px) scale(1.15); }
+        }
+
+        /* ==========================================
+           3. DESKTOP GRID & WIDGETS (KDE Plasmoids)
+           ========================================== */
+        #desktop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            padding: 70px 30px 90px 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-auto-rows: min-content;
+            gap: 20px;
+            pointer-events: none;
+        }
+
+        .plasmoid {
+            pointer-events: auto;
+            background: var(--bg-surface);
+            backdrop-filter: var(--blur-strength);
+            -webkit-backdrop-filter: var(--blur-strength);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            box-shadow: var(--shadow-pill);
+            color: var(--text-main);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .plasmoid:hover {
+            border-color: var(--border-glass-bright);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--accent);
+        }
+        .plasmoid-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .plasmoid-header i {
+            color: var(--accent);
+            font-size: 16px;
+        }
+
+        /* System Monitor Plasmoid */
+        .sys-meter {
+            margin-bottom: 10px;
+        }
+        .sys-meter-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 4px;
+            font-family: var(--font-mono);
+        }
+        .sys-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.05);
+            border-radius: var(--radius-pill);
+            overflow: hidden;
+        }
+        .sys-bar-fill {
+            height: 100%;
+            background: var(--accent-gradient);
+            border-radius: var(--radius-pill);
+            transition: width 0.4s ease;
+        }
+        canvas.sparkline {
+            width: 100%;
+            height: 40px;
+            margin-top: 5px;
+            background: rgba(0,0,0,0.2);
+            border-radius: var(--radius-sm);
+        }
+
+        /* Sticky Note Plasmoid */
+        .sticky-note-content {
+            width: 100%;
+            height: 120px;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            font-size: 13px;
+            resize: none;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        /* ==========================================
+           4. FLOATING TOP PILL BAR (Caelestia Shell)
+           ========================================== */
+        #top-bar {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100vw - 24px);
+            max-width: 1400px;
+            height: 44px;
+            background: var(--bg-surface);
+            backdrop-filter: var(--blur-strength);
+            -webkit-backdrop-filter: var(--blur-strength);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-pill);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            box-shadow: var(--shadow-pill);
+        }
+
+        .top-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.2s, color 0.2s;
+        }
+        .top-btn:hover {
+            background: var(--bg-glass-hover);
+            color: var(--accent);
+        }
+        .top-btn.active {
+            background: var(--accent);
+            color: var(--bg-base);
+            font-weight: 600;
+        }
+
+        .workspace-pills {
+            display: flex;
+            gap: 4px;
+            background: rgba(0,0,0,0.2);
+            padding: 3px;
+            border-radius: var(--radius-pill);
+        }
+        .ws-pill {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ws-pill:hover {
+            color: var(--text-main);
+            background: rgba(255,255,255,0.05);
+        }
+        .ws-pill.active {
+            background: var(--accent);
+            color: var(--bg-base);
+        }
+
+        .media-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,0,0,0.25);
+            padding: 4px 12px 4px 8px;
+            border-radius: var(--radius-pill);
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .media-pill:hover {
+            border-color: var(--border-glass-bright);
+        }
+        .media-pill i {
+            color: var(--accent);
+            font-size: 14px;
+        }
+        .media-marquee {
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-muted);
+        }
+
+        .sys-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+        }
+        .sys-pill span i {
+            color: var(--accent);
+        }
+
+        /* ==========================================
+           5. FLOATING BOTTOM DOCK (Latte Dock Style)
+           ========================================== */
+        #bottom-dock {
+            position: fixed;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 60px;
+            background: var(--bg-surface);
+            backdrop-filter: var(--blur-strength);
+            -webkit-backdrop-filter: var(--blur-strength);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-pill);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 12px;
+            box-shadow: var(--shadow-pill);
+        }
+
+        .dock-item {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: transparent;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s;
+        }
+        .dock-item i {
+            font-size: 24px;
+            color: var(--text-main);
+            transition: color 0.2s;
+        }
+        .dock-item:hover {
+            transform: translateY(-8px) scale(1.15);
+            background: var(--bg-glass-hover);
+        }
+        .dock-item:hover i {
+            color: var(--accent);
+        }
+        .dock-item .dot {
+            position: absolute;
+            bottom: 2px;
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .dock-item.open .dot {
+            opacity: 1;
+        }
+        .dock-separator {
+            width: 1px;
+            height: 24px;
+            background: var(--border-glass);
+            margin: 0 4px;
+        }
+
+        /* Tooltip */
+        .dock-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            background: var(--bg-surface-solid);
+            color: var(--text-main);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            border: 1px solid var(--border-glass);
+        }
+        .dock-item:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ==========================================
+           6. CONTROL CENTER POPOVER
+           ========================================== */
+        #control-center {
+            position: fixed;
+            top: 66px;
+            right: 20px;
+            width: 320px;
+            background: var(--bg-surface-solid);
+            backdrop-filter: var(--blur-strength);
+            -webkit-backdrop-filter: var(--blur-strength);
+            border: 1px solid var(--border-glass-bright);
+            border-radius: var(--radius-lg);
+            z-index: 1001;
+            padding: 20px;
+            box-shadow: var(--shadow-window);
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #control-center.open {
+            display: flex;
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .cc-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .cc-themes {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        .theme-btn {
+            padding: 10px 0;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-glass);
+            background: var(--bg-glass);
+            color: var(--text-main);
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .theme-btn:hover {
+            border-color: var(--accent);
+        }
+        .theme-btn.active {
+            background: var(--accent);
+            color: var(--bg-base);
+            border-color: var(--accent);
+            font-weight: 600;
+        }
+
+        .cc-slider-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-glass);
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-glass);
+        }
+        .cc-slider-group i {
+            color: var(--accent);
+            font-size: 18px;
+        }
+        .cc-slider-group input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        /* ==========================================
+           7. APP LAUNCHER GRID (OS Menu)
+           ========================================== */
+        #app-launcher {
+            position: fixed;
+            top: 66px;
+            left: 20px;
+            width: 420px;
+            height: 480px;
+            background: var(--bg-surface-solid);
+            backdrop-filter: var(--blur-strength);
+            -webkit-backdrop-filter: var(--blur-strength);
+            border: 1px solid var(--border-glass-bright);
+            border-radius: var(--radius-lg);
+            z-index: 1001;
+            padding: 20px;
+            box-shadow: var(--shadow-window);
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #app-launcher.open {
+            display: flex;
+        }
+        .launcher-search {
+            width: 100%;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-pill);
+            padding: 10px 16px;
+            color: var(--text-main);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .launcher-search:focus {
+            border-color: var(--accent);
+        }
+        .launcher-grid {
+            flex: 1;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            align-content: start;
+            padding-right: 4px;
+        }
+        .launcher-app {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            padding: 16px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .launcher-app:hover {
+            background: var(--bg-glass-hover);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        .launcher-app i {
+            font-size: 28px;
+            color: var(--accent);
+        }
+        .launcher-app span {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-main);
+            text-align: center;
+        }
+
+        /* ==========================================
+           8. WINDOW MANAGER (KDE Breeze / Caelestia)
+           ========================================== */
+        .window {
+            position: absolute;
+            background: var(--bg-surface-solid);
+            backdrop-filter: var(--blur-strength);
+            -webkit-backdrop-filter: var(--blur-strength);
+            border: 1px solid var(--border-glass-bright);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-window);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10;
+            min-width: 320px;
+            min-height: 200px;
+            transition: opacity 0.15s, transform 0.15s;
+        }
+        .window.minimized {
+            opacity: 0;
+            transform: scale(0.8) translateY(100px);
+            pointer-events: none;
+        }
+        .window.maximized {
+            top: 60px !important;
+            left: 10px !important;
+            width: calc(100vw - 20px) !important;
+            height: calc(100vh - 84px) !important;
+            border-radius: var(--radius-md) !important;
+        }
+        .window-header {
+            height: 40px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-glass);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            cursor: grab;
+        }
+        .window-header:active {
+            cursor: grabbing;
+        }
+        .window-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .window-title i {
+            color: var(--accent);
+        }
+        .window-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .win-btn {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: rgba(0,0,0,0.7);
+            transition: filter 0.2s;
+        }
+        .win-btn:hover {
+            filter: brightness(1.2);
+        }
+        .win-close { background: #f38ba8; }
+        .win-maximize { background: #f9e2af; }
+        .win-minimize { background: #a6e3a1; }
+
+        .window-body {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Resize Handle */
+        .resize-handle {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 16px;
+            height: 16px;
+            cursor: nwse-resize;
+            z-index: 100;
+        }
+
+        /* ==========================================
+           9. BUILT-IN APPLICATIONS STYLING
+           ========================================== */
+
+        /* --- Terminal (Zsh) --- */
+        .app-terminal {
+            background: rgba(17, 17, 27, 0.85);
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--text-main);
+            height: 100%;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .term-output {
+            flex: 1;
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.5;
+        }
+        .term-input-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .term-prompt {
+            color: var(--accent);
+            font-weight: bold;
+        }
+        .term-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            outline: none;
+        }
+
+        /* --- Music Player (BANG Beats) --- */
+        .app-music {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 20px;
+            gap: 16px;
+            background: linear-gradient(135deg, rgba(30,30,46,0.9) 0%, rgba(17,17,27,0.95) 100%);
+        }
+        .music-visualizer-container {
+            width: 100%;
+            height: 120px;
+            background: rgba(0,0,0,0.3);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--border-glass);
+            position: relative;
+        }
+        .music-visualizer-container canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .music-details {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .music-meta h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+        .music-meta p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .music-progress-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .music-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .music-progress-fill {
+            height: 100%;
+            background: var(--accent-gradient);
+            width: 0%;
+            border-radius: var(--radius-pill);
+        }
+        .music-timestamps {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: var(--text-dim);
+        }
+        .music-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+        .m-ctrl-btn {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .m-ctrl-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .m-ctrl-btn.primary {
+            width: 52px;
+            height: 52px;
+            background: var(--accent);
+            color: var(--bg-base);
+            border: none;
+        }
+        .m-ctrl-btn.primary:hover {
+            filter: brightness(1.1);
+            color: var(--bg-base);
+        }
+        .playlist-box {
+            flex: 1;
+            background: rgba(0,0,0,0.2);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-glass);
+            overflow-y: auto;
+            padding: 8px;
+        }
+        .playlist-item {
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .playlist-item:hover {
+            background: var(--bg-glass-hover);
+        }
+        .playlist-item.active {
+            background: var(--accent-glow);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* --- Code & Markdown Pad --- */
+        .app-code {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 100%;
+            background: var(--bg-base);
+        }
+        .code-editor-pane, .code-preview-pane {
+            padding: 16px;
+            overflow-y: auto;
+            height: 100%;
+        }
+        .code-editor-pane {
+            border-right: 1px solid var(--border-glass);
+            background: rgba(17,17,27,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        .code-textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            resize: none;
+            outline: none;
+            line-height: 1.5;
+        }
+        .code-preview-pane {
+            background: var(--bg-surface-solid);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .code-preview-pane h1, .code-preview-pane h2, .code-preview-pane h3 {
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        .code-preview-pane p { margin-bottom: 10px; }
+        .code-preview-pane ul { padding-left: 20px; margin-bottom: 10px; }
+
+        /* --- File Manager (Dolphin Style) --- */
+        .app-files {
+            display: flex;
+            height: 100%;
+        }
+        .file-sidebar {
+            width: 180px;
+            background: rgba(0,0,0,0.2);
+            border-right: 1px solid var(--border-glass);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .file-sidebar-item {
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .file-sidebar-item:hover, .file-sidebar-item.active {
+            background: var(--bg-glass-hover);
+            color: var(--accent);
+        }
+        .file-main-content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            grid-auto-rows: min-content;
+            gap: 16px;
+            align-content: start;
+        }
+        .file-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            padding: 16px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-card:hover {
+            border-color: var(--accent);
+            background: var(--bg-glass-hover);
+        }
+        .file-card i {
+            font-size: 32px;
+            color: var(--accent);
+        }
+        .file-card span {
+            font-size: 11px;
+            color: var(--text-main);
+            text-align: center;
+            word-break: break-all;
+        }
+
+        /* --- Dev Utils & Calculator --- */
+        .app-devutils {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 16px;
+            gap: 16px;
+        }
+        .dev-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 8px;
+        }
+        .dev-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+        }
+        .dev-tab-btn.active {
+            background: var(--accent);
+            color: var(--bg-base);
+        }
+        .dev-panel {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .dev-panel.active {
+            display: flex;
+        }
+        .calc-display {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 24px;
+            text-align: right;
+            color: var(--text-main);
+        }
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            flex: 1;
+        }
+        .calc-btn {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .calc-btn:hover {
+            background: var(--bg-glass-hover);
+            border-color: var(--accent);
+        }
+        .calc-btn.op {
+            color: var(--accent);
+        }
+
+        .formatter-box {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 8px;
+        }
+        .formatter-textarea {
+            flex: 1;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            padding: 10px;
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            resize: none;
+            outline: none;
+        }
+        .formatter-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .action-btn {
+            background: var(--accent);
+            color: var(--bg-base);
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Calendar Popover */
+        #calendar-popover {
+            position: fixed;
+            top: 66px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px;
+            background: var(--bg-surface-solid);
+            backdrop-filter: var(--blur-strength);
+            -webkit-backdrop-filter: var(--blur-strength);
+            border: 1px solid var(--border-glass-bright);
+            border-radius: var(--radius-lg);
+            z-index: 1001;
+            padding: 16px;
+            box-shadow: var(--shadow-window);
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #calendar-popover.open {
+            display: flex;
+        }
+        .cal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .cal-day-name {
+            color: var(--text-dim);
+            font-weight: 600;
+            font-size: 10px;
+            padding-bottom: 4px;
+        }
+        .cal-cell {
+            padding: 8px 0;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+        .cal-cell:hover {
+            background: var(--bg-glass-hover);
+            color: var(--text-main);
+        }
+        .cal-cell.today {
+            background: var(--accent);
+            color: var(--bg-base);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. WALLPAPER -->
+    <div id="wallpaper">
+        <div class="wp-blob wp-blob-1"></div>
+        <div class="wp-blob wp-blob-2"></div>
+        <div class="wp-blob wp-blob-3"></div>
+    </div>
+
+    <!-- 2. FLOATING TOP PILL BAR -->
+    <header id="top-bar">
+        <div class="top-section">
+            <button class="top-btn" id="launcher-toggle">
+                <i class="ph-bold ph-squares-four"></i> BANG OS
+            </button>
+            <div class="workspace-pills">
+                <button class="ws-pill active" onclick="switchWorkspace(1)">1</button>
+                <button class="ws-pill" onclick="switchWorkspace(2)">2</button>
+                <button class="ws-pill" onclick="switchWorkspace(3)">3</button>
+                <button class="ws-pill" onclick="switchWorkspace(4)">4</button>
+            </div>
+        </div>
+
+        <div class="top-section">
+            <button class="top-btn" id="clock-btn">
+                <i class="ph-bold ph-clock"></i> <span id="top-clock">00:00</span>
+            </button>
+        </div>
+
+        <div class="top-section">
+            <div class="media-pill" id="media-pill" onclick="openApp('music')">
+                <i class="ph-fill ph-music-note"></i>
+                <span class="media-marquee" id="top-media-title">Lo-Fi Synth 01</span>
+            </div>
+            <div class="sys-pill">
+                <span><i class="ph-bold ph-cpu"></i> <span id="top-cpu">12%</span></span>
+                <span><i class="ph-bold ph-memory"></i> <span id="top-ram">42%</span></span>
+            </div>
+            <button class="top-btn" id="cc-toggle">
+                <i class="ph-bold ph-sliders"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- 3. DESKTOP KDE PLASMOIDS -->
+    <div id="desktop">
+        <!-- System Monitor Plasmoid -->
+        <div class="plasmoid">
+            <div class="plasmoid-header">
+                <span>System Health</span>
+                <i class="ph-bold ph-activity"></i>
+            </div>
+            <div class="sys-meter">
+                <div class="sys-meter-info"><span>CPU Usage</span><span id="plasmoid-cpu-text">14%</span></div>
+                <div class="sys-bar-bg"><div class="sys-bar-fill" id="plasmoid-cpu-bar" style="width: 14%;"></div></div>
+            </div>
+            <div class="sys-meter">
+                <div class="sys-meter-info"><span>RAM Usage</span><span id="plasmoid-ram-text">48%</span></div>
+                <div class="sys-bar-bg"><div class="sys-bar-fill" id="plasmoid-ram-bar" style="width: 48%;"></div></div>
+            </div>
+            <canvas class="sparkline" id="sparkline-canvas"></canvas>
+        </div>
+
+        <!-- Sticky Note Plasmoid -->
+        <div class="plasmoid">
+            <div class="plasmoid-header">
+                <span>Sticky Notes</span>
+                <i class="ph-bold ph-note-pencil"></i>
+            </div>
+            <textarea class="sticky-note-content" id="sticky-note" placeholder="Jot down quick thoughts here... Saved locally."></textarea>
+        </div>
+    </div>
+
+    <!-- 4. APP LAUNCHER POPUP -->
+    <div id="app-launcher">
+        <input type="text" class="launcher-search" id="launcher-search" placeholder="Type to search applications...">
+        <div class="launcher-grid" id="launcher-grid">
+            <div class="launcher-app" onclick="openApp('terminal')">
+                <i class="ph-bold ph-terminal-window"></i>
+                <span>Zsh Terminal</span>
+            </div>
+            <div class="launcher-app" onclick="openApp('music')">
+                <i class="ph-bold ph-music-notes"></i>
+                <span>BANG Beats</span>
+            </div>
+            <div class="launcher-app" onclick="openApp('code')">
+                <i class="ph-bold ph-code"></i>
+                <span>Code Pad</span>
+            </div>
+            <div class="launcher-app" onclick="openApp('files')">
+                <i class="ph-bold ph-folder-open"></i>
+                <span>Dolphin Files</span>
+            </div>
+            <div class="launcher-app" onclick="openApp('devutils')">
+                <i class="ph-bold ph-wrench"></i>
+                <span>Dev Utils</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. CONTROL CENTER POPOVER -->
+    <div id="control-center">
+        <div class="cc-section-title">Accent Theme</div>
+        <div class="cc-themes">
+            <button class="theme-btn active" onclick="setTheme('lavender', this)">Lavender</button>
+            <button class="theme-btn" onclick="setTheme('peach', this)">Peach</button>
+            <button class="theme-btn" onclick="setTheme('mint', this)">Mint</button>
+            <button class="theme-btn" onclick="setTheme('rose', this)">Rose</button>
+        </div>
+        <div class="cc-section-title">Master Volume</div>
+        <div class="cc-slider-group">
+            <i class="ph-bold ph-speaker-high"></i>
+            <input type="range" id="volume-slider" min="0" max="100" value="80">
+        </div>
+    </div>
+
+    <!-- 6. CALENDAR POPOVER -->
+    <div id="calendar-popover">
+        <div class="cal-header" id="cal-month-year">June 2026</div>
+        <div class="cal-grid" id="cal-grid">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+
+    <!-- 7. FLOATING BOTTOM DOCK -->
+    <nav id="bottom-dock">
+        <button class="dock-item" data-tooltip="Terminal" onclick="openApp('terminal')">
+            <i class="ph-bold ph-terminal-window"></i>
+            <div class="dot" id="dot-terminal"></div>
+        </button>
+        <button class="dock-item" data-tooltip="BANG Beats" onclick="openApp('music')">
+            <i class="ph-bold ph-music-notes"></i>
+            <div class="dot" id="dot-music"></div>
+        </button>
+        <button class="dock-item" data-tooltip="Code Pad" onclick="openApp('code')">
+            <i class="ph-bold ph-code"></i>
+            <div class="dot" id="dot-code"></div>
+        </button>
+        <button class="dock-item" data-tooltip="File Manager" onclick="openApp('files')">
+            <i class="ph-bold ph-folder-open"></i>
+            <div class="dot" id="dot-files"></div>
+        </button>
+        <div class="dock-separator"></div>
+        <button class="dock-item" data-tooltip="Dev Utils" onclick="openApp('devutils')">
+            <i class="ph-bold ph-wrench"></i>
+            <div class="dot" id="dot-devutils"></div>
+        </button>
+    </nav>
+
+    <!-- WINDOW CONTAINER -->
+    <div id="window-manager-layer"></div>
+
+    <!-- ==========================================
+       JAVASCRIPT ARCHITECTURE
+       ========================================== -->
+    <script>
+        /* --- VIRTUAL FILESYSTEM & LOCALSTORAGE --- */
+        let vfs = JSON.parse(localStorage.getItem('bang_vfs')) || {
+            '/home/user': { type: 'dir' },
+            '/home/user/welcome.txt': { type: 'file', content: 'Welcome to BANG OS!\nA handcrafted Linux desktop environment running right in your browser.\nEnjoy the Caelestia Shell and KDE Plasma aesthetic.' },
+            '/home/user/notes.md': { type: 'file', content: '# Project Notes\n- Configure dotfiles\n- Rice Arch Linux\n- Build high performance web apps' }
+        };
+
+        function saveVFS() {
+            localStorage.setItem('bang_vfs', JSON.stringify(vfs));
+        }
+
+        /* --- STATE MANAGEMENT --- */
+        let activeWorkspace = 1;
+        let windows = {};
+        let zIndexCounter = 100;
+
+        // Clock & Calendar
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('top-clock').textContent = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Popovers Management
+        const launcherToggle = document.getElementById('launcher-toggle');
+        const appLauncher = document.getElementById('app-launcher');
+        const ccToggle = document.getElementById('cc-toggle');
+        const controlCenter = document.getElementById('control-center');
+        const clockBtn = document.getElementById('clock-btn');
+        const calendarPopover = document.getElementById('calendar-popover');
+
+        launcherToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            appLauncher.classList.toggle('open');
+            controlCenter.classList.remove('open');
+            calendarPopover.classList.remove('open');
+        });
+
+        ccToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            controlCenter.classList.toggle('open');
+            appLauncher.classList.remove('open');
+            calendarPopover.classList.remove('open');
+        });
+
+        clockBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            calendarPopover.classList.toggle('open');
+            appLauncher.classList.remove('open');
+            controlCenter.classList.remove('open');
+            renderCalendar();
+        });
+
+        window.addEventListener('click', () => {
+            appLauncher.classList.remove('open');
+            controlCenter.classList.remove('open');
+            calendarPopover.classList.remove('open');
+        });
+
+        appLauncher.addEventListener('click', e => e.stopPropagation());
+        controlCenter.addEventListener('click', e => e.stopPropagation());
+        calendarPopover.addEventListener('click', e => e.stopPropagation());
+
+        // Theme Switcher
+        function setTheme(themeName, btn) {
+            document.documentElement.setAttribute('data-theme', themeName);
+            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // Calendar Generator
+        function renderCalendar() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('cal-month-year').textContent = `${months[month]} ${year}`;
+
+            const grid = document.getElementById('cal-grid');
+            grid.innerHTML = `
+                <div class="cal-day-name">Su</div><div class="cal-day-name">Mo</div><div class="cal-day-name">Tu</div>
+                <div class="cal-day-name">We</div><div class="cal-day-name">Th</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sa</div>
+            `;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                grid.innerHTML += `<div></div>`;
+            }
+            for (let d = 1; d <= daysInMonth; d++) {
+                const isToday = d === now.getDate() ? 'today' : '';
+                grid.innerHTML += `<div class="cal-cell ${isToday}">${d}</div>`;
+            }
+        }
+
+        /* --- WORKSPACE SWITCHING --- */
+        function switchWorkspace(ws) {
+            activeWorkspace = ws;
+            document.querySelectorAll('.ws-pill').forEach((p, idx) => {
+                p.classList.toggle('active', idx + 1 === ws);
+            });
+            Object.values(windows).forEach(win => {
+                if (win.workspace !== ws) {
+                    win.element.style.display = 'none';
+                } else {
+                    win.element.style.display = 'flex';
+                }
+            });
+        }
+
+        /* --- SYSTEM MONITOR SPARKLINE --- */
+        const sparkCanvas = document.getElementById('sparkline-canvas');
+        const sparkCtx = sparkCanvas.getContext('2d');
+        let cpuHistory = Array(20).fill(15);
+
+        function updateSystemStats() {
+            const cpu = Math.floor(Math.random() * 25) + 10;
+            const ram = 42 + Math.floor(Math.sin(Date.now() / 2000) * 5);
+
+            document.getElementById('top-cpu').textContent = cpu + '%';
+            document.getElementById('top-ram').textContent = ram + '%';
+            document.getElementById('plasmoid-cpu-text').textContent = cpu + '%';
+            document.getElementById('plasmoid-cpu-bar').style.width = cpu + '%';
+            document.getElementById('plasmoid-ram-text').textContent = ram + '%';
+            document.getElementById('plasmoid-ram-bar').style.width = ram + '%';
+
+            cpuHistory.shift();
+            cpuHistory.push(cpu);
+
+            // Draw Sparkline
+            sparkCanvas.width = sparkCanvas.offsetWidth;
+            sparkCanvas.height = sparkCanvas.offsetHeight;
+            sparkCtx.clearRect(0, 0, sparkCanvas.width, sparkCanvas.height);
+            sparkCtx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+            sparkCtx.lineWidth = 2;
+            sparkCtx.beginPath();
+
+            const step = sparkCanvas.width / (cpuHistory.length - 1);
+            cpuHistory.forEach((val, idx) => {
+                const x = idx * step;
+                const y = sparkCanvas.height - (val / 100) * sparkCanvas.height;
+                if (idx === 0) sparkCtx.moveTo(x, y);
+                else sparkCtx.lineTo(x, y);
+            });
+            sparkCtx.stroke();
+        }
+        setInterval(updateSystemStats, 1500);
+
+        // Sticky note local storage
+        const stickyNote = document.getElementById('sticky-note');
+        stickyNote.value = localStorage.getItem('bang_sticky') || '';
+        stickyNote.addEventListener('input', () => {
+            localStorage.setItem('bang_sticky', stickyNote.value);
+        });
+
+
+        /* ==========================================
+           WINDOW MANAGER CORE
+           ========================================== */
+        function createWindow(id, title, icon, width, height, htmlContent, initCallback) {
+            if (windows[id]) {
+                const win = windows[id];
+                win.element.style.display = 'flex';
+                win.element.classList.remove('minimized');
+                focusWindow(id);
+                return;
+            }
+
+            const layer = document.getElementById('window-manager-layer');
+            const winEl = document.createElement('div');
+            winEl.className = 'window';
+            winEl.style.width = width + 'px';
+            winEl.style.height = height + 'px';
+            winEl.style.left = (window.innerWidth / 2 - width / 2 + (Math.random() * 40 - 20)) + 'px';
+            winEl.style.top = (window.innerHeight / 2 - height / 2 + (Math.random() * 40 - 20)) + 'px';
+            winEl.style.zIndex = ++zIndexCounter;
+
+            winEl.innerHTML = `
+                <div class="window-header" id="win-header-${id}">
+                    <div class="window-title">
+                        <i class="ph-bold ${icon}"></i>
+                        <span>${title}</span>
+                    </div>
+                    <div class="window-controls">
+                        <button class="win-btn win-minimize" onclick="minimizeWindow('${id}')"></button>
+                        <button class="win-btn win-maximize" onclick="maximizeWindow('${id}')"></button>
+                        <button class="win-btn win-close" onclick="closeWindow('${id}')"></button>
+                    </div>
+                </div>
+                <div class="window-body">
+                    ${htmlContent}
+                </div>
+                <div class="resize-handle" id="resize-${id}"></div>
+            `;
+
+            layer.appendChild(winEl);
+            windows[id] = { element: winEl, workspace: activeWorkspace, maximized: false };
+
+            // Dock indicator dot
+            const dot = document.getElementById(`dot-${id}`);
+            if (dot) dot.parentElement.classList.add('open');
+
+            // Focus on click
+            winEl.addEventListener('mousedown', () => focusWindow(id));
+
+            // Dragging logic
+            const header = document.getElementById(`win-header-${id}`);
+            let isDragging = false, startX, startY, initialLeft, initialTop;
+
+            header.addEventListener('mousedown', (e) => {
+                if(e.target.tagName === 'BUTTON') return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                initialLeft = winEl.offsetLeft;
+                initialTop = winEl.offsetTop;
+                e.preventDefault();
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                winEl.style.left = (initialLeft + (e.clientX - startX)) + 'px';
+                winEl.style.top = Math.max(60, initialTop + (e.clientY - startY)) + 'px';
+            });
+
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            // Resizing logic
+            const resizer = document.getElementById(`resize-${id}`);
+            let isResizing = false, rStartX, rStartY, rStartW, rStartH;
+
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                rStartX = e.clientX;
+                rStartY = e.clientY;
+                rStartW = winEl.offsetWidth;
+                rStartH = winEl.offsetHeight;
+                e.stopPropagation();
+                e.preventDefault();
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                winEl.style.width = Math.max(320, rStartW + (e.clientX - rStartX)) + 'px';
+                winEl.style.height = Math.max(200, rStartH + (e.clientY - rStartY)) + 'px';
+            });
+
+            window.addEventListener('mouseup', () => { isResizing = false; });
+
+            if (initCallback) initCallback(winEl);
+            focusWindow(id);
+        }
+
+        function focusWindow(id) {
+            if (windows[id]) {
+                windows[id].element.style.zIndex = ++zIndexCounter;
+            }
+        }
+
+        function minimizeWindow(id) {
+            windows[id].element.classList.add('minimized');
+        }
+
+        function maximizeWindow(id) {
+            const win = windows[id];
+            win.maximized = !win.maximized;
+            win.element.classList.toggle('maximized', win.maximized);
+        }
+
+        function closeWindow(id) {
+            if (windows[id]) {
+                windows[id].element.remove();
+                delete windows[id];
+                const dot = document.getElementById(`dot-${id}`);
+                if (dot) dot.parentElement.classList.remove('open');
+            }
+        }
+
+        function openApp(appName) {
+            switch(appName) {
+                case 'terminal':
+                    createWindow('terminal', 'Zsh Terminal', 'ph-terminal-window', 640, 400, `
+                        <div class="app-terminal">
+                            <div class="term-output" id="term-output">BANG OS v2.6.0 (x86_64-zen-linux-gnu)
+Type 'help' to see available commands or 'neofetch' for system specs.\n</div>
+                            <div class="term-input-line">
+                                <span class="term-prompt">user@bang-os ~ %</span>
+                                <input type="text" class="term-input" id="term-input" autofocus autocomplete="off" spellcheck="false">
+                            </div>
+                        </div>
+                    `, initTerminal);
+                    break;
+
+                case 'music':
+                    createWindow('music', 'BANG Beats (Audio Engine)', 'ph-music-notes', 580, 480, `
+                        <div class="app-music">
+                            <div class="music-visualizer-container">
+                                <canvas id="audio-visualizer"></canvas>
+                            </div>
+                            <div class="music-details">
+                                <div class="music-meta">
+                                    <h3 id="player-title">Synthetic Lo-Fi Stream 01</h3>
+                                    <p id="player-artist">Web Audio API Synth Generator</p>
+                                </div>
+                                <label class="action-btn" style="cursor: pointer;">
+                                    <i class="ph-bold ph-plus"></i> Add Music
+                                    <input type="file" id="audio-file-input" accept="audio/*" multiple style="display: none;">
+                                </label>
+                            </div>
+                            <div class="music-progress-container">
+                                <div class="music-progress-bar" id="music-progress-bar">
+                                    <div class="music-progress-fill" id="music-progress-fill"></div>
+                                </div>
+                                <div class="music-timestamps">
+                                    <span id="time-current">00:00</span>
+                                    <span id="time-total">00:00</span>
+                                </div>
+                            </div>
+                            <div class="music-controls">
+                                <button class="m-ctrl-btn" onclick="musicPrev()"><i class="ph-bold ph-skip-back"></i></button>
+                                <button class="m-ctrl-btn primary" id="music-play-btn" onclick="musicTogglePlay()"><i class="ph-fill ph-play" id="play-icon"></i></button>
+                                <button class="m-ctrl-btn" onclick="musicNext()"><i class="ph-bold ph-skip-forward"></i></button>
+                            </div>
+                            <div class="playlist-box" id="playlist-container"></div>
+                        </div>
+                    `, initMusicPlayer);
+                    break;
+
+                case 'code':
+                    createWindow('code', 'Code & Markdown Pad', 'ph-code', 700, 450, `
+                        <div class="app-code">
+                            <div class="code-editor-pane">
+                                <textarea class="code-textarea" id="code-textarea" placeholder="Write markdown or code here..."># Hello BANG OS
+Start writing Markdown here and watch the live preview render instantly on the right pane!</textarea>
+                            </div>
+                            <div class="code-preview-pane" id="code-preview"></div>
+                        </div>
+                    `, initCodePad);
+                    break;
+
+                case 'files':
+                    createWindow('files', 'Dolphin File Manager', 'ph-folder-open', 650, 420, `
+                        <div class="app-files">
+                            <div class="file-sidebar">
+                                <div class="file-sidebar-item active" onclick="loadFiles('/home/user')"><i class="ph-bold ph-house"></i> Home</div>
+                                <div class="file-sidebar-item" onclick="loadFiles('/home/user/documents')"><i class="ph-bold ph-file-text"></i> Documents</div>
+                            </div>
+                            <div class="file-main-content" id="file-grid-container"></div>
+                        </div>
+                    `, initFileManager);
+                    break;
+
+                case 'devutils':
+                    createWindow('devutils', 'Dev Utils & Calculator', 'ph-wrench', 480, 420, `
+                        <div class="app-devutils">
+                            <div class="dev-tabs">
+                                <button class="dev-tab-btn active" onclick="switchDevTab(0, this)">Calculator</button>
+                                <button class="dev-tab-btn" onclick="switchDevTab(1, this)">Base64 / JSON</button>
+                            </div>
+                            <div class="dev-panel active" id="dev-panel-0">
+                                <div class="calc-display" id="calc-display">0</div>
+                                <div class="calc-grid">
+                                    <button class="calc-btn" onclick="calcAppend('7')">7</button>
+                                    <button class="calc-btn" onclick="calcAppend('8')">8</button>
+                                    <button class="calc-btn" onclick="calcAppend('9')">9</button>
+                                    <button class="calc-btn op" onclick="calcAppend('/')">÷</button>
+                                    <button class="calc-btn" onclick="calcAppend('4')">4</button>
+                                    <button class="calc-btn" onclick="calcAppend('5')">5</button>
+                                    <button class="calc-btn" onclick="calcAppend('6')">6</button>
+                                    <button class="calc-btn op" onclick="calcAppend('*')">×</button>
+                                    <button class="calc-btn" onclick="calcAppend('1')">1</button>
+                                    <button class="calc-btn" onclick="calcAppend('2')">2</button>
+                                    <button class="calc-btn" onclick="calcAppend('3')">3</button>
+                                    <button class="calc-btn op" onclick="calcAppend('-')">-</button>
+                                    <button class="calc-btn" onclick="calcClear()">C</button>
+                                    <button class="calc-btn" onclick="calcAppend('0')">0</button>
+                                    <button class="calc-btn" onclick="calcCompute()">=</button>
+                                    <button class="calc-btn op" onclick="calcAppend('+')">+</button>
+                                </div>
+                            </div>
+                            <div class="dev-panel" id="dev-panel-1">
+                                <div class="formatter-box">
+                                    <textarea class="formatter-textarea" id="formatter-input" placeholder="Paste JSON or plain text here..."></textarea>
+                                    <div class="formatter-actions">
+                                        <button class="action-btn" onclick="formatJSON()">Format JSON</button>
+                                        <button class="action-btn" onclick="encodeBase64()">Encode Base64</button>
+                                        <button class="action-btn" onclick="decodeBase64()">Decode Base64</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    break;
+            }
+        }
+
+
+        /* ==========================================
+           APP INITIALIZERS & LOGIC
+           ========================================== */
+
+        // --- 1. Terminal Logic ---
+        function initTerminal(winEl) {
+            const input = winEl.querySelector('.term-input');
+            const output = winEl.querySelector('.term-output');
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = input.value.trim();
+                    output.textContent += `user@bang-os ~ % ${cmd}\n`;
+                    processCommand(cmd, output);
+                    input.value = '';
+                    output.scrollTop = output.scrollHeight;
+                }
+            });
+        }
+
+        function processCommand(cmd, output) {
+            const parts = cmd.split(' ');
+            const main = parts[0];
+            const arg = parts[1];
+
+            switch(main) {
+                case 'help':
+                    output.textContent += `Available commands:
+  neofetch             Show system architecture info
+  ls                   List virtual directory contents
+  cat [file]           Read file contents
+  echo [text] > [file] Write text to file
+  clear                Clear terminal screen
+  calc [expr]          Evaluate math expression
+  open [app]           Open app (terminal, music, code, files, devutils)
+  help                 Display this help menu\n\n`;
+                    break;
+                case 'neofetch':
+                    output.textContent += `
+       /\\              user@bang-os
+      /  \\             ------------
+     /\\   \\            OS: BANG OS (Arch Linux x86_64)
+    /      \\           Kernel: 6.12.8-zen1-1-zen
+   / /\\     \\          DE: KDE Plasma 6.3 / Caelestia Shell
+  / /  \\     \\         Terminal: zsh 5.9
+ / /    \\     \\        CPU: WebAssembly Virtualized Core
+/_/      \\_____\\       RAM: 1024MB / 16384MB\n\n`;
+                    break;
+                case 'ls':
+                    Object.keys(vfs).forEach(path => {
+                        output.textContent += `${path} (${vfs[path].type})\n`;
+                    });
+                    output.textContent += '\n';
+                    break;
+                case 'cat':
+                    if (vfs[arg] && vfs[arg].type === 'file') {
+                        output.textContent += `${vfs[arg].content}\n\n`;
+                    } else {
+                        output.textContent += `cat: ${arg}: No such file\n\n`;
+                    }
+                    break;
+                case 'clear':
+                    output.textContent = '';
+                    break;
+                case 'calc':
+                    try {
+                        const res = eval(parts.slice(1).join(' '));
+                        output.textContent += `${res}\n\n`;
+                    } catch(err) {
+                        output.textContent += `calc: invalid expression\n\n`;
+                    }
+                    break;
+                case 'open':
+                    if (['terminal', 'music', 'code', 'files', 'devutils'].includes(arg)) {
+                        openApp(arg);
+                        output.textContent += `Launched ${arg}.\n\n`;
+                    } else {
+                        output.textContent += `open: unknown app '${arg}'\n\n`;
+                    }
+                    break;
+                case '':
+                    break;
+                default:
+                    output.textContent += `zsh: command not found: ${main}\n\n`;
+                    break;
+            }
+        }
+
+
+        // --- 2. Music Player & Audio Engine ---
+        let audioCtx = null;
+        let audioElement = new Audio();
+        let audioAnalyser = null;
+        let audioSourceNode = null;
+        let isPlaying = false;
+
+        // Built-in procedural ambient synths as fallback tracks
+        let playlist = [
+            { name: "Synthetic Lo-Fi Chill", artist: "BANG OS Synth Engine", type: "synth", freq: 220 },
+            { name: "Cyberpunk Ambient Chord", artist: "Caelestia Audio", type: "synth", freq: 146.83 }
+        ];
+        let currentTrackIdx = 0;
+        let synthOscillator = null;
+        let synthGain = null;
+
+        function initMusicPlayer(winEl) {
+            const fileInput = winEl.querySelector('#audio-file-input');
+            fileInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                for (let file of files) {
+                    playlist.push({
+                        name: file.name,
+                        artist: "Local Upload",
+                        type: "file",
+                        url: URL.createObjectURL(file)
+                    });
+                }
+                renderPlaylist(winEl);
+            });
+            renderPlaylist(winEl);
+            setupVisualizer(winEl);
+        }
+
+        function renderPlaylist(winEl = document) {
+            const container = winEl.querySelector('#playlist-container');
+            if(!container) return;
+            container.innerHTML = '';
+            playlist.forEach((track, idx) => {
+                const item = document.createElement('div');
+                item.className = `playlist-item ${idx === currentTrackIdx ? 'active' : ''}`;
+                item.innerHTML = `<span>${track.name}</span><span>${track.artist}</span>`;
+                item.onclick = () => {
+                    currentTrackIdx = idx;
+                    playCurrentTrack();
+                    renderPlaylist();
+                };
+                container.appendChild(item);
+            });
+        }
+
+        function musicTogglePlay() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioAnalyser = audioCtx.createAnalyser();
+                audioAnalyser.fftSize = 64;
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            isPlaying = !isPlaying;
+            const playIcon = document.getElementById('play-icon');
+            if (playIcon) playIcon.className = isPlaying ? 'ph-fill ph-pause' : 'ph-fill ph-play';
+
+            const track = playlist[currentTrackIdx];
+            if (track.type === 'synth') {
+                if (isPlaying) {
+                    startSynth(track.freq);
+                } else {
+                    stopSynth();
+                }
+            } else {
+                if (isPlaying) {
+                    if (audioElement.src !== track.url) {
+                        audioElement.src = track.url;
+                        audioSourceNode = audioCtx.createMediaElementSource(audioElement);
+                        audioSourceNode.connect(audioAnalyser);
+                        audioAnalyser.connect(audioCtx.destination);
+                    }
+                    audioElement.play();
+                } else {
+                    audioElement.pause();
+                }
+            }
+            document.getElementById('top-media-title').textContent = track.name;
+            document.getElementById('player-title').textContent = track.name;
+        }
+
+        function playCurrentTrack() {
+            isPlaying = false;
+            stopSynth();
+            audioElement.pause();
+            musicTogglePlay();
+        }
+
+        function musicNext() {
+            currentTrackIdx = (currentTrackIdx + 1) % playlist.length;
+            playCurrentTrack();
+            renderPlaylist();
+        }
+
+        function musicPrev() {
+            currentTrackIdx = (currentTrackIdx - 1 + playlist.length) % playlist.length;
+            playCurrentTrack();
+            renderPlaylist();
+        }
+
+        function startSynth(freq) {
+            stopSynth();
+            synthOscillator = audioCtx.createOscillator();
+            synthGain = audioCtx.createGain();
+            synthOscillator.type = 'sine';
+            synthOscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+            // Add filter & analyser
+            synthGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            synthOscillator.connect(synthGain);
+            synthGain.connect(audioAnalyser);
+            audioAnalyser.connect(audioCtx.destination);
+            synthOscillator.start();
+        }
+
+        function stopSynth() {
+            if (synthOscillator) {
+                try { synthOscillator.stop(); } catch(e){}
+                synthOscillator.disconnect();
+                synthOscillator = null;
+            }
+        }
+
+        function setupVisualizer(winEl) {
+            const canvas = winEl.querySelector('#audio-visualizer');
+            const ctx = canvas.getContext('2d');
+
+            function draw() {
+                requestAnimationFrame(draw);
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (!isPlaying || !audioAnalyser) {
+                    // Draw idle flat bars
+                    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+                    for (let i = 0; i < 16; i++) {
+                        ctx.fillRect(i * 20 + 10, canvas.height - 10, 12, 4);
+                    }
+                    return;
+                }
+
+                const bufferLength = audioAnalyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                audioAnalyser.getByteFrequencyData(dataArray);
+
+                const barWidth = (canvas.width / 16) - 4;
+                let x = 0;
+
+                for (let i = 0; i < 16; i++) {
+                    const barHeight = (dataArray[i] / 255) * canvas.height;
+                    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+                    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                    x += barWidth + 4;
+                }
+            }
+            draw();
+        }
+
+
+        // --- 3. Code & Markdown Pad ---
+        function initCodePad(winEl) {
+            const textarea = winEl.querySelector('#code-textarea');
+            const preview = winEl.querySelector('#code-preview');
+
+            function updatePreview() {
+                const text = textarea.value;
+                // Simple markdown parser simulation
+                let html = text
+                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/^- (.*$)/gim, '<li>$1</li>')
+                    .replace(/\n/gim, '<br>');
+                preview.innerHTML = html;
+            }
+
+            textarea.addEventListener('input', updatePreview);
+            updatePreview();
+        }
+
+
+        // --- 4. File Manager ---
+        function initFileManager(winEl) {
+            loadFiles('/home/user');
+        }
+
+        function loadFiles(path) {
+            const container = document.getElementById('file-grid-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            Object.keys(vfs).forEach(filePath => {
+                if (filePath.startsWith(path) && filePath !== path) {
+                    const subPath = filePath.replace(path + '/', '');
+                    if (!subPath.includes('/')) {
+                        const item = document.createElement('div');
+                        item.className = 'file-card';
+                        const isDir = vfs[filePath].type === 'dir';
+                        item.innerHTML = `
+                            <i class="ph-bold ${isDir ? 'ph-folder' : 'ph-file-text'}"></i>
+                            <span>${subPath}</span>
+                        `;
+                        item.ondblclick = () => {
+                            if (!isDir) {
+                                openApp('code');
+                                setTimeout(() => {
+                                    document.getElementById('code-textarea').value = vfs[filePath].content;
+                                }, 100);
+                            }
+                        };
+                        container.appendChild(item);
+                    }
+                }
+            });
+        }
+
+
+        // --- 5. Dev Utils & Calculator ---
+        function switchDevTab(idx, btn) {
+            const panels = document.querySelectorAll('.dev-panel');
+            const buttons = document.querySelectorAll('.dev-tab-btn');
+            panels.forEach((p, i) => p.classList.toggle('active', i === idx));
+            buttons.forEach((b, i) => b.classList.toggle('active', i === idx));
+        }
+
+        let calcVal = '0';
+        function calcAppend(char) {
+            if (calcVal === '0' && !isNaN(char)) calcVal = char;
+            else calcVal += char;
+            document.getElementById('calc-display').textContent = calcVal;
+        }
+        function calcClear() {
+            calcVal = '0';
+            document.getElementById('calc-display').textContent = calcVal;
+        }
+        function calcCompute() {
+            try {
+                calcVal = eval(calcVal).toString();
+                document.getElementById('calc-display').textContent = calcVal;
+            } catch(e) {
+                calcVal = 'Error';
+                document.getElementById('calc-display').textContent = calcVal;
+                calcVal = '0';
+            }
+        }
+
+        function formatJSON() {
+            const input = document.getElementById('formatter-input');
+            try {
+                const parsed = JSON.parse(input.value);
+                input.value = JSON.stringify(parsed, null, 2);
+            } catch(e) {
+                alert('Invalid JSON');
+            }
+        }
+        function encodeBase64() {
+            const input = document.getElementById('formatter-input');
+            input.value = btoa(input.value);
+        }
+        function decodeBase64() {
+            const input = document.getElementById('formatter-input');
+            try {
+                input.value = atob(input.value);
+            } catch(e) {
+                alert('Invalid Base64 string');
+            }
+        }
+
+        // Master Volume Slider
+        document.getElementById('volume-slider').addEventListener('input', (e) => {
+            const vol = e.target.value / 100;
+            if (audioElement) audioElement.volume = vol;
+            if (synthGain && audioCtx) {
+                synthGain.gain.setValueAtTime(vol * 0.2, audioCtx.currentTime);
+            }
+        });
+
+    </script>
+</body>
+</html>
